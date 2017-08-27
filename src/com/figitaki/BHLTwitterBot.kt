@@ -10,6 +10,8 @@ import java.net.URL
 import java.util.concurrent.ThreadLocalRandom
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
+import java.util.Timer
+import kotlin.concurrent.timerTask
 
 fun randomPhoto(flickr: Flickr): Photo? = try {
     val user = flickr.peopleInterface.findByUsername("biodivlibrary")
@@ -50,6 +52,13 @@ fun tweetPhoto(twitter: Twitter, photo: Photo) = try {
     exit(-1)
 }
 
+fun generateNewTweet(twitter: Twitter, flickr: Flickr) {
+    val photo = randomPhoto(flickr)
+    if (photo != null) tweetPhoto(twitter, photo)
+    val timer = Timer()
+    timer.schedule(timerTask { generateNewTweet(twitter, flickr) }, 2 * 60 * 60 * 1000)
+}
+
 fun main(args: Array<String>) {
     val apikey = "6936713b7b5cf9107a5e449a87731a82"
     val secret = "86d2cefa25a9b436"
@@ -65,9 +74,5 @@ fun main(args: Array<String>) {
     val tf = TwitterFactory(cb.build())
     val twitter = tf.instance
 
-    while (true) {
-        val photo = randomPhoto(flickr)
-        if (photo != null) tweetPhoto(twitter, photo)
-        Thread.sleep(2 * 60 * 60 * 1000) // Wait for 2 hours
-    }
+    generateNewTweet(twitter, flickr)
 }
